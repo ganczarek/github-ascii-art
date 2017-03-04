@@ -9,6 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"time"
 	"github.com/libgit2/git2go"
+	"runtime"
 )
 
 const TEST_USER_NAME = "Test User Name"
@@ -67,34 +68,24 @@ func Test_Commit_ShouldNotReturnErrorWhenCreateCommitInThePast(t *testing.T) {
 
 	// repository should be empty before commit
 	isRepoEmpty, err := gitClient.Repo.IsEmpty()
-	if err != nil {
-		t.Fatal(err)
-	}
+	checkFatal(t, err)
 	assert.True(t, isRepoEmpty)
 
 	err = gitClient.CreateCommitAtDate(date, "Test commit message")
 
 	assert.Nil(t, err)
 	isRepoEmpty, err = gitClient.Repo.IsEmpty()
-	if err != nil {
-		t.Fatal(err)
-	}
+	checkFatal(t, err)
 	assert.False(t, isRepoEmpty)
 }
 
 func setupTestConfig(t *testing.T) *git.Config {
 	c, err := git.OpenOndisk(nil, TEST_TEMP_CONFIG)
-	if err != nil {
-		t.Fatalf("Failed to open %s", TEST_TEMP_CONFIG)
-	}
+	checkFatal(t, err)
 	err = c.SetString("user.name", TEST_USER_NAME)
-	if err != nil {
-		t.Fatalf("Failed to set user.name value in %d", TEST_TEMP_CONFIG)
-	}
+	checkFatal(t, err)
 	err = c.SetString("user.email", TEST_USER_EMAIL)
-	if err != nil {
-		t.Fatalf("Failed to set user.email value in %s", TEST_TEMP_CONFIG)
-	}
+	checkFatal(t, err)
 	return c
 }
 
@@ -106,13 +97,23 @@ func setupTestRepoAndClient(t *testing.T) *GitClient {
 	config := setupTestConfig(t)
 	repoPath := fmt.Sprintf("%s/%s/%s", TEST_TEMP_DIR, uuid.New().String(), "TestRepo")
 	gitClient, err := New(repoPath, config)
-	if err != nil {
-		t.Fatalf("Failed to create git client!\n%s", err)
-	}
+	checkFatal(t, err)
 	return gitClient
 }
 
 func cleanupTestRepo() {
 	cleanupTestConfig()
 	os.Remove(TEST_TEMP_DIR)
+}
+
+func checkFatal(t *testing.T, err error) {
+	if err == nil {
+		return
+	}
+	// The failure happens at wherever we were called, not here
+	_, file, line, ok := runtime.Caller(1)
+	if !ok {
+		t.Fatal("Unable to get caller")
+	}
+	t.Fatalf("Failed at %v:%v; %v", file, line, err)
 }
