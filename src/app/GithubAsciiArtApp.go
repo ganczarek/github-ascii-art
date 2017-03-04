@@ -8,20 +8,29 @@ import (
 	"os/user"
 	"strings"
 	"time"
+	"fmt"
 )
 
 func main() {
 	modelFile, outputRepoPath, gitConfigPath, year, weekOffset := setupArgs()
-	commitDataChan, err := reader.ReadCommitDataFromFileToChannel(modelFile)
+	fmt.Printf("Read commit data from [%s]\n", modelFile)
+	commitDataChan, done, err := reader.ReadCommitDataFromFileToChannel(modelFile)
 	checkError(err)
+	fmt.Printf("Create/re-use repo [%s]\n", outputRepoPath)
 	repoClient, err := gitclient.New(outputRepoPath, readGitConfig(gitConfigPath))
 	checkError(err)
 
-	for commitData := range commitDataChan {
-		commitTimes := CalculateCommitTimes(commitData, year, weekOffset)
-		commitDataAtTimes(repoClient, commitTimes...)
+	fmt.Printf("Calculated commits for year [%d] with offset [%d]\n", year, weekOffset)
+	for {
+		select {
+		case commitData := <-commitDataChan:
+			commitTimes := CalculateCommitTimes(commitData, year, weekOffset)
+			commitDataAtTimes(repoClient, commitTimes...)
+		case <- done:
+			fmt.Printf("Finished committing to [%s]\n", outputRepoPath)
+			return
+		}
 	}
-
 }
 
 func setupArgs() (string, string, string, int, int) {
@@ -46,7 +55,9 @@ func checkError(err error) {
 func readGitConfig(configPath string) *git.Config {
 	usr, err := user.Current()
 	checkError(err)
-	config, err := git.OpenOndisk(nil, strings.Replace(configPath, "~", usr.HomeDir, 1))
+	pathWithReplacedTilda := strings.Replace(configPath, "~", usr.HomeDir, 1)
+	fmt.Printf("Read git config from [%s]\n", pathWithReplacedTilda)
+	config, err := git.OpenOndisk(nil, pathWithReplacedTilda)
 	checkError(err)
 	return config
 }
