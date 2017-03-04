@@ -9,13 +9,12 @@ import (
 )
 
 type gitClient struct {
-	repoName       string
-	parentRepoPath string
-	authorName     string
-	authorEmail    string
+	RepoPath  string
+	UserName  string
+	UserEmail string
 }
 
-func GitClient(repoName string, repoPath string, config *git.Config) (*gitClient, error) {
+func GitClient(repoPath string, config *git.Config) (*gitClient, error) {
 	authorEmail, err := config.LookupString("user.email")
 	if err != nil {
 		return nil, err
@@ -24,15 +23,11 @@ func GitClient(repoName string, repoPath string, config *git.Config) (*gitClient
 	if err != nil {
 		return nil, err
 	}
-	return &gitClient{repoName, repoPath, authorName, authorEmail}, nil
+	return &gitClient{repoPath, authorName, authorEmail}, nil
 }
 
 func (gc gitClient) RepoConfigPath() string {
-	return fmt.Sprintf("%s/.git", gc.RepoPath())
-}
-
-func (gc gitClient) RepoPath() string {
-	return fmt.Sprintf("%s/%s", gc.parentRepoPath, gc.repoName)
+	return fmt.Sprintf("%s/.git", gc.RepoPath)
 }
 
 func (gc gitClient) InitRepo() error {
@@ -46,12 +41,12 @@ func (gc gitClient) InitRepo() error {
 
 func (gc gitClient) CreateCommitAtDate(commitDate time.Time, commitMessage string) error {
 	tmpfile := "README"
-	err := ioutil.WriteFile(gc.RepoPath() + "/" + tmpfile, []byte("foo\n"), 0644)
+	err := ioutil.WriteFile(gc.RepoPath + "/" + tmpfile, []byte("foo\n"), 0644)
 	repo, err := git.OpenRepository(gc.RepoConfigPath())
 	if err != nil {
 		return err
 	}
-	sig := &git.Signature{Name: gc.authorName, Email: gc.authorEmail, When: commitDate}
+	sig := &git.Signature{Name: gc.UserName, Email: gc.UserEmail, When: commitDate}
 	idx, err := repo.Index()
 	err = idx.AddByPath("README")
 	if err != nil {
