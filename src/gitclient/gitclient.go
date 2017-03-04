@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"time"
 	"io/ioutil"
+	"github.com/google/uuid"
 )
 
 type GitClient struct {
@@ -14,6 +15,8 @@ type GitClient struct {
 	UserEmail string
 	Repo      *git.Repository
 }
+
+const COMMITS_DIR = "commits"
 
 func New(repoPath string, config *git.Config) (*GitClient, error) {
 	authorEmail, err := config.LookupString("user.email")
@@ -44,15 +47,15 @@ func (gc GitClient) RepoConfigPath() string {
 }
 
 func (gc GitClient) CreateCommitAtDate(commitDate time.Time, commitMessage string) error {
-	tmpfile := "README"
-	err := ioutil.WriteFile(gc.RepoPath + "/" + tmpfile, []byte("foo\n"), 0644)
+	commitFile := COMMITS_DIR + uuid.New().String()
+	err := ioutil.WriteFile(gc.RepoPath + "/" + commitFile, []byte("\n"), 0644)
 	repo, err := git.OpenRepository(gc.RepoConfigPath())
 	if err != nil {
 		return err
 	}
 	sig := &git.Signature{Name: gc.UserName, Email: gc.UserEmail, When: commitDate}
 	idx, err := repo.Index()
-	err = idx.AddByPath("README")
+	err = idx.AddByPath(commitFile)
 	if err != nil {
 		return err
 	}
