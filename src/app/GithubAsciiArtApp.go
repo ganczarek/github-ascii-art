@@ -37,9 +37,9 @@ func setupArgs() (string, string, string, int, int) {
 
 	inputModel := flag.String("input-model", "./models/mario_head.txt", "File with commit model")
 	outputRepoPath := flag.String("output-repo", "./output_repo", "Output repo path")
-	gitConfigPath := flag.String("git-config-path", "~/.gitconfig", "Git config file")
+	gitConfigPath := flag.String("git-config", "~/.gitconfig", "Git config file")
 	year := flag.Int("year", 2015, "Year of commit messages")
-	weekOffset := flag.Int("week-offset", 0, "Offest of the image from the begginning of the year")
+	weekOffset := flag.Int("offset", 0, "Offest of the image from the begginning of the year (in weeks)")
 
 	flag.Parse()
 
