@@ -35,10 +35,36 @@ func Test_ShouldCalculateTimeForFirstSundayOfGithubContributionYear(t *testing.T
 
 func Test_ShouldCalculateTimeForFirstSundayOfAYearWithOffset(t *testing.T) {
 	commitData := reader.CommitData{0, 0, 1}
-	offset := 2
-	expectedTime := time.Date(2013, 12, 29, 12, 0, 0, 0, time.UTC).AddDate(0, 0, 7 * offset)
+	expectedTime := time.Date(2014, 1, 12, 12, 0, 0, 0, time.UTC)
 
-	result := CalculateCommitTime(commitData, 2014, offset)
+	result := CalculateCommitTime(commitData, 2014, 2)
+
+	assert.Equal(t, expectedTime, result)
+}
+
+func Test_ShouldCalculateTimeForCommitDataWithoutOffset(t *testing.T) {
+	commitData := reader.CommitData{3, 4, 1}
+	expectedTime := time.Date(2014, 1, 29, 12, 0, 0, 0, time.UTC)
+
+	result := CalculateCommitTime(commitData, 2014, 0)
+
+	assert.Equal(t, expectedTime, result)
+}
+
+func Test_ShouldCalculateTimeForCommitDataWithOffset(t *testing.T) {
+	commitData := reader.CommitData{3, 4, 1}
+	expectedTime := time.Date(2014, 2, 26, 12, 0, 0, 0, time.UTC)
+
+	result := CalculateCommitTime(commitData, 2014, 4)
+
+	assert.Equal(t, expectedTime, result)
+}
+
+func Test_ShouldCalculateTimeForCommitDataWithOnlyDayChange(t *testing.T) {
+	commitData := reader.CommitData{1, 0, 1}
+	expectedTime := time.Date(2013, 12, 30, 12, 0, 0, 0, time.UTC)
+
+	result := CalculateCommitTime(commitData, 2014, 0)
 
 	assert.Equal(t, expectedTime, result)
 }
