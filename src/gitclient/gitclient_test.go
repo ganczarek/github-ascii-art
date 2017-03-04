@@ -19,7 +19,7 @@ var TEST_TEMP_DIR = os.TempDir() + "/go_gitclient_test"
 var TEST_TEMP_CONFIG = TEST_TEMP_DIR + "/temp_test.gitconfig"
 
 func Test_ClientConstruction_ShouldFail_WhenNoConfigFile(t *testing.T) {
-	repoPath := fmt.Sprintf("%s/go_gitclient_test/%s", os.TempDir(), uuid.New().String())
+	repoPath := fmt.Sprintf("%s/%s", TEST_TEMP_DIR, uuid.New().String())
 	config, err := git.OpenOndisk(nil, "non-esiting-git-config-file")
 
 	_, err = New(repoPath, config)
@@ -28,7 +28,7 @@ func Test_ClientConstruction_ShouldFail_WhenNoConfigFile(t *testing.T) {
 }
 
 func Test_ClientConstruction_WhenConfigFileExists(t *testing.T) {
-	repoPath := fmt.Sprintf("%s/go_gitclient_test/%s", os.TempDir(), uuid.New().String())
+	repoPath := fmt.Sprintf("%s/%s", TEST_TEMP_DIR, uuid.New().String())
 	config := setupTestConfig(t)
 	defer cleanupTestConfig()
 
@@ -74,12 +74,31 @@ func Test_Commit_ShouldNotReturnErrorWhenCreateCommitInThePast(t *testing.T) {
 	err = gitClient.CreateCommitAtDate(date, "Test commit message")
 
 	assert.Nil(t, err)
-	isRepoEmpty, err = gitClient.Repo.IsEmpty()
+	idx, err := gitClient.Repo.Index()
 	checkFatal(t, err)
-	assert.False(t, isRepoEmpty)
+	assert.Equal(t, uint(1), idx.EntryCount())
+}
+
+func Test_Commit_MultipleCommits(t *testing.T) {
+	gitClient := setupTestRepoAndClient(t)
+	defer cleanupTestRepo()
+	numberOfCommits := 100
+
+	for i := 0; i < numberOfCommits; i++ {
+		err := gitClient.CreateCommitAtDate(
+			time.Date(2000 + i, time.June, 6, 12, 0, 0, 0, time.UTC),
+			"Test commit message " + string(i))
+		checkFatal(t, err)
+	}
+
+	idx, err := gitClient.Repo.Index()
+	checkFatal(t, err)
+	assert.Equal(t, uint(numberOfCommits), idx.EntryCount())
 }
 
 func setupTestConfig(t *testing.T) *git.Config {
+	err := os.MkdirAll(TEST_TEMP_DIR, os.ModePerm)
+	checkFatal(t, err)
 	c, err := git.OpenOndisk(nil, TEST_TEMP_CONFIG)
 	checkFatal(t, err)
 	err = c.SetString("user.name", TEST_USER_NAME)
@@ -103,7 +122,7 @@ func setupTestRepoAndClient(t *testing.T) *GitClient {
 
 func cleanupTestRepo() {
 	cleanupTestConfig()
-	os.Remove(TEST_TEMP_DIR)
+	os.RemoveAll(TEST_TEMP_DIR)
 }
 
 func checkFatal(t *testing.T, err error) {

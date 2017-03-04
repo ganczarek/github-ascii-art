@@ -35,7 +35,7 @@ func New(repoPath string, config *git.Config) (*GitClient, error) {
 }
 
 func initRepo(repoPath string) (*git.Repository, error) {
-	err := os.MkdirAll(repoPath, os.ModePerm)
+	err := os.MkdirAll(repoPath + "/" + COMMITS_DIR, os.ModePerm)
 	if err != nil {
 		return nil, err
 	}
@@ -47,7 +47,7 @@ func (gc GitClient) RepoConfigPath() string {
 }
 
 func (gc GitClient) CreateCommitAtDate(commitDate time.Time, commitMessage string) error {
-	commitFile := COMMITS_DIR + uuid.New().String()
+	commitFile := COMMITS_DIR + "/" + uuid.New().String()
 	err := ioutil.WriteFile(gc.RepoPath + "/" + commitFile, []byte("\n"), 0644)
 	repo, err := git.OpenRepository(gc.RepoConfigPath())
 	if err != nil {
@@ -74,9 +74,28 @@ func (gc GitClient) CreateCommitAtDate(commitDate time.Time, commitMessage strin
 	if err != nil {
 		return err
 	}
-	_, err = repo.CreateCommit("HEAD", sig, sig, commitMessage, tree)
+
+	isHeadUnborn, err := repo.IsHeadUnborn()
+	parentCommits := []*git.Commit{}
 	if err != nil {
 		return err
 	}
+	if !isHeadUnborn {
+		head, err := repo.Head()
+		if err != nil {
+			return err
+		}
+		commit, err := repo.LookupCommit(head.Target())
+		if err != nil {
+			return err
+		}
+		parentCommits = []*git.Commit{commit}
+	}
+
+	_, err = repo.CreateCommit("HEAD", sig, sig, commitMessage, tree, parentCommits...)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
