@@ -1,20 +1,21 @@
 package reader_test
 
 import (
-	"testing"
-	"github.com/stretchr/testify/assert"
-	. "."
-	"time"
-	"github.com/deckarep/golang-set"
 	"fmt"
+	"testing"
+	"time"
+	. "."
+	"github.com/deckarep/golang-set"
+	"github.com/stretchr/testify/assert"
 )
 
 const DEFAULT_TEST_TIMEOUT time.Duration = 2 * time.Second
+
 // it's global, tests cannot run in parallel because of this
 var TEST_TIMEOUT_CHAN = make(chan struct{})
 
 func FailTestAfter(t *testing.T, duration time.Duration) {
-	time.Sleep(duration);
+	time.Sleep(duration)
 	TEST_TIMEOUT_CHAN <- struct{}{}
 }
 
