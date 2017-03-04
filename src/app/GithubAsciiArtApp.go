@@ -60,9 +60,14 @@ func CalculateCommitTimes(commitData reader.CommitData, year int, weekOffset int
 }
 
 func CalculateCommitTime(commitData reader.CommitData, year int, weekOffset int) time.Time {
-	firstMondayOfAYear := time.Date(year, 0, 0, 12, 0, 0, 0, time.UTC)
-	shiftedBeginningOfYear := firstMondayOfAYear.AddDate(0, 0, weekOffset * 7)
+	firstSundayOfYearAtNoon := FirstSunday(year).Add(12 * time.Hour)
+	shiftedBeginningOfYear := firstSundayOfYearAtNoon.AddDate(0, 0, weekOffset * 7)
 	return shiftedBeginningOfYear.AddDate(0, 0, commitData.DayOfWeek + (7 * commitData.WeekOfYear))
+}
+func FirstSunday(year int) time.Time {
+	beginningOfYear := time.Date(year, 1, 1, 0, 0, 0, 0, time.UTC)
+	daysToLastSunday := int(time.Sunday) - int(beginningOfYear.Weekday())
+	return beginningOfYear.AddDate(0, 0, daysToLastSunday)
 }
 
 func commitDataAtTimes(gc *gitclient.GitClient, commitTimes ...time.Time) {
