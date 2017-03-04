@@ -11,9 +11,9 @@ import (
 const MAX_DAY_OF_WEEK int = 6
 
 type CommitData struct {
-	dayOfWeek       int
-	weekOfYear      int
-	numberOfCommits int
+	DayOfWeek       int
+	WeekOfYear      int
+	NumberOfCommits int
 }
 
 func ReadCommitDataFromFileToChannel(filepath string) (<-chan CommitData, error) {
@@ -25,7 +25,7 @@ func ReadCommitDataFromFileToChannel(filepath string) (<-chan CommitData, error)
 	scanner := bufio.NewScanner(file)
 	for i := 0; scanner.Scan(); i++ {
 		if i > MAX_DAY_OF_WEEK {
-			return nil, errors.New(fmt.Sprintf("File shouldn't have more than %d lines", MAX_DAY_OF_WEEK + 1))
+			return nil, errors.New(fmt.Sprintf("File shouldn't have more than %d lines", MAX_DAY_OF_WEEK + 1)	)
 		}
 		go ReadCommitDataFromString(scanner.Text(), i, commits)
 	}
