@@ -1,4 +1,4 @@
-package main_test
+package reader_test
 
 import (
 	"testing"
@@ -25,13 +25,13 @@ func Test_ShouldFailToReadFileThatDoesNotExist(t *testing.T) {
 
 // there are only 7 days in a week
 func Test_ShouldFailIfAFileHasMoreThan7Lines(t *testing.T) {
-	_, err := ReadCommitDataFromFileToChannel("./test-resources/more_than_8_lines.txt")
+	_, err := ReadCommitDataFromFileToChannel("./testdata/more_than_8_lines.txt")
 	assert.NotNil(t, err, "It should fail to read a file that has more than 8 lines")
 }
 
 func Test_ShouldReadSingleCommitDataFromAFile(t *testing.T) {
 	expectedData := CommitData{2, 5, 9}
-	commits, err := ReadCommitDataFromFileToChannel("./test-resources/many_chars_single_digit.txt")
+	commits, err := ReadCommitDataFromFileToChannel("./testdata/many_chars_single_digit.txt")
 	assert.Nil(t, err)
 	result := <-commits
 	assert.Equal(t, result, expectedData)
@@ -41,7 +41,7 @@ func Test_ShouldReadAllCommitDataFromAFile(t *testing.T) {
 	go FailTestAfter(t, DEFAULT_TEST_TIMEOUT)
 	expectedData := mapset.NewSet(CommitData{0, 0, 1}, CommitData{0, 2, 2}, CommitData{0, 4, 3},
 		CommitData{1, 0, 4}, CommitData{1, 2, 5}, CommitData{2, 0, 6})
-	commits, err := ReadCommitDataFromFileToChannel("./test-resources/simple_model.txt")
+	commits, err := ReadCommitDataFromFileToChannel("./testdata/simple_model.txt")
 	assert.Nil(t, err)
 	for {
 		select {
