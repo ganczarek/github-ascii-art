@@ -14,7 +14,7 @@ const DEFAULT_TEST_TIMEOUT time.Duration = 2 * time.Second
 // it's global, tests cannot run in parallel because of this
 var TEST_TIMEOUT_CHAN = make(chan struct{})
 
-func FailTestAfter(t *testing.T, duration time.Duration) {
+func FailTestAfter(duration time.Duration) {
 	time.Sleep(duration)
 	TEST_TIMEOUT_CHAN <- struct{}{}
 }
@@ -39,7 +39,7 @@ func Test_ShouldReadSingleCommitDataFromAFile(t *testing.T) {
 }
 
 func Test_ShouldReadAllCommitDataFromAFile(t *testing.T) {
-	go FailTestAfter(t, DEFAULT_TEST_TIMEOUT)
+	go FailTestAfter(DEFAULT_TEST_TIMEOUT)
 	expectedData := mapset.NewSet(CommitData{0, 0, 1}, CommitData{0, 2, 2}, CommitData{0, 4, 3},
 		CommitData{1, 0, 4}, CommitData{1, 2, 5}, CommitData{2, 0, 6})
 	commits, err := ReadCommitDataFromFileToChannel("./testdata/simple_model.txt")
@@ -57,7 +57,7 @@ func Test_ShouldReadAllCommitDataFromAFile(t *testing.T) {
 				t.FailNow()
 			}
 		case <-TEST_TIMEOUT_CHAN:
-			t.Error(fmt.Printf("Test timed out. Didn't find expected data %s\n", expectedData.String()))
+			t.Error(fmt.Sprintf("Test timed out. Didn't find expected data %s\n", expectedData.String()))
 			t.FailNow()
 		}
 	}
