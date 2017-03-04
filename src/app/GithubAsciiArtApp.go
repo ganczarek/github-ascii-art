@@ -54,7 +54,7 @@ func readGitConfig(configPath string) *git.Config {
 func CalculateCommitTimes(commitData reader.CommitData, year int, weekOffset int) []time.Time {
 	timeArray := make([]time.Time, commitData.NumberOfCommits)
 	for i := 0; i < len(timeArray); i++ {
-		timeArray[i] = CalculateCommitTime(commitData, year, weekOffset)
+		timeArray[i] = CalculateCommitTime(commitData, year, weekOffset).Add(time.Duration(i) * time.Minute)
 	}
 	return timeArray
 }
